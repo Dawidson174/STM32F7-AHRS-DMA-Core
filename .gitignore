@@ -1,0 +1,19 @@
+# STM32CubeIDE specific
+/Debug/
+/Release/
+/.settings/
+.mxproject
+*.launch
+
+# Build files
+*.o
+*.d
+*.su
+*.elf
+*.bin
+*.hex
+*.map
+
+# OS specific
+.DS_Store
+Thumbs.db
