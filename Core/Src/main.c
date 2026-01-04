@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "lsm6dso.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +46,7 @@ DMA_HandleTypeDef hdma_i2c1_rx;
 DMA_HandleTypeDef hdma_i2c1_tx;
 
 /* USER CODE BEGIN PV */
-
+LSM6DSO_t imu_sensor;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,7 +95,19 @@ int main(void)
   MX_DMA_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-
+  //Trying to initialize sensor
+  if (LSM6DSO_Init(&imu_sensor, &hi2c1) == 0) {
+	  for(int i=0; i<4; i++) {
+		  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+		  HAL_Delay(100);
+	  }
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+  } else {
+	  while(1) {
+		  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+		  HAL_Delay(50);
+	  }
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -105,6 +117,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  LSM6DSO_ReadAccel(&imu_sensor);
+
+	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
