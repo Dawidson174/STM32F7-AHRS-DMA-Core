@@ -11,9 +11,13 @@
 #define LSM6DSO_CTRL1_XL		0x10 // Accelerometer configuration
 #define LSM6DSO_CTRL2_G			0x11 // Gyroscope configuration
 #define LSM6DSO_STATUS_REG		0x1E
+#define LSM6DSO_OUTX_L_G		0x22 // start data from gyroscope
 #define LSM6DSO_OUTX_L_A		0x28 // start data from accelerometer
 
 #define LSM6DSO_WHO_AM_I_VAL	0x6C
+
+#define LSM6DSO_ACC_SENSITIVITY 0.122f
+#define LSM6DSO_GYRO_SENSITIVITY 0.070f
 
 // Main structure
 typedef struct {
@@ -23,11 +27,16 @@ typedef struct {
 	int16_t accel_raw[3]; 	// X, Y, Z
 	int16_t gyro_raw[3]; 	// X, Y, Z
 
+	float accel_g[3];
+	float gyro_dps[3];
+
 } LSM6DSO_t;
 
 // Functions
 uint8_t LSM6DSO_Init(LSM6DSO_t *dev, I2C_HandleTypeDef *i2cHandle);
 
-HAL_StatusTypeDef LSM6DSO_ReadAccel(LSM6DSO_t *dev);
+void LSM6DSO_ReadAccel(LSM6DSO_t *dev);
+void LSM6DSO_ReadGyro(LSM6DSO_t *dev);
+void LSM6DSO_ReadAll(LSM6DSO_t *dev);
 
 #endif

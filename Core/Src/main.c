@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lsm6dso.h"
+#include <stdio.h>
+#include "stm32f7xx_hal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,6 +47,8 @@ I2C_HandleTypeDef hi2c1;
 DMA_HandleTypeDef hdma_i2c1_rx;
 DMA_HandleTypeDef hdma_i2c1_tx;
 
+UART_HandleTypeDef huart3;
+
 /* USER CODE BEGIN PV */
 LSM6DSO_t imu_sensor;
 /* USER CODE END PV */
@@ -54,13 +58,19 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+extern UART_HandleTypeDef huart3;
 
+int _write(int file, char *ptr, int len) {
+	HAL_UART_Transmit(&huart3, (uint8_t*)ptr, len, 1000);
+	return len;
+}
 /* USER CODE END 0 */
 
 /**
@@ -94,19 +104,14 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_I2C1_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-  //Trying to initialize sensor
+  printf("System Start!\r\n");
+
   if (LSM6DSO_Init(&imu_sensor, &hi2c1) == 0) {
-	  for(int i=0; i<4; i++) {
-		  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-		  HAL_Delay(100);
-	  }
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+	  printf("LSM6DSO Init OK!\r\n");
   } else {
-	  while(1) {
-		  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-		  HAL_Delay(50);
-	  }
+	  printf("LSM6DSO FAILED!\r\n");
   }
   /* USER CODE END 2 */
 
@@ -117,9 +122,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  LSM6DSO_ReadAccel(&imu_sensor);
+	  LSM6DSO_ReadAll(&imu_sensor);
 
-	  HAL_Delay(100);
+	  printf("ACC: %.2f, %.2f, %.2f [g] | GYRO: %.2f, %.2f, %.2f [dps]\r\n",
+	             imu_sensor.accel_g[0], imu_sensor.accel_g[1], imu_sensor.accel_g[2],
+	             imu_sensor.gyro_dps[0], imu_sensor.gyro_dps[1], imu_sensor.gyro_dps[2]);
+
+	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+
+	  HAL_Delay(200);
   }
   /* USER CODE END 3 */
 }
@@ -226,6 +237,41 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -306,14 +352,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
   HAL_GPIO_Init(RMII_TXD1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : STLK_RX_Pin STLK_TX_Pin */
-  GPIO_InitStruct.Pin = STLK_RX_Pin|STLK_TX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pin : USB_PowerSwitchOn_Pin */
   GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
