@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lsm6dso.h"
+#include "lis3mdl.h"
 #include <stdio.h>
 #include "stm32f7xx_hal.h"
 /* USER CODE END Includes */
@@ -51,6 +52,7 @@ UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 LSM6DSO_t imu_sensor;
+LIS3MDL_t mag_sensor;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,11 +110,20 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("System Start!\r\n");
 
+  // IMU (LSM6DSO)
   if (LSM6DSO_Init(&imu_sensor, &hi2c1) == 0) {
 	  printf("LSM6DSO Init OK!\r\n");
   } else {
 	  printf("LSM6DSO FAILED!\r\n");
   }
+
+  // COMPAS (LIS3MDL)
+  if (LIS3MDL_Init(&mag_sensor, &hi2c1) == 0) {
+	  printf("MAG Init OK!\r\n");
+  } else {
+	  printf("MAG FAILED!\r\n");
+  }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -124,9 +135,14 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  LSM6DSO_ReadAll(&imu_sensor);
 
+	  LIS3MDL_ReadMag(&mag_sensor);
+
 	  printf("ACC: %.2f, %.2f, %.2f [g] | GYRO: %.2f, %.2f, %.2f [dps]\r\n",
 	             imu_sensor.accel_g[0], imu_sensor.accel_g[1], imu_sensor.accel_g[2],
 	             imu_sensor.gyro_dps[0], imu_sensor.gyro_dps[1], imu_sensor.gyro_dps[2]);
+
+	  printf("MAG: %.2f, %.2f, %.2f [Gauss]\r\n\r\n",
+			  mag_sensor.mag_gauss[0], mag_sensor.mag_gauss[1], mag_sensor.mag_gauss[2]);
 
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 
