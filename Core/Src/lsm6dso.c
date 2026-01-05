@@ -48,9 +48,9 @@ void LSM6DSO_ReadGyro(LSM6DSO_t *dev) {
 	dev->gyro_raw[1] = (int16_t)(raw[3] << 8 | raw[2]);
 	dev->gyro_raw[2] = (int16_t)(raw[5] << 8 | raw[4]);
 
-	dev->gyro_dps[0] = (dev->gyro_raw[0] * LSM6DSO_GYRO_SENSITIVITY) / 1000.0f;
-	dev->gyro_dps[1] = (dev->gyro_raw[1] * LSM6DSO_GYRO_SENSITIVITY) / 1000.0f;
-	dev->gyro_dps[2] = (dev->gyro_raw[2] * LSM6DSO_GYRO_SENSITIVITY) / 1000.0f;
+	dev->gyro_dps[0] = (dev->gyro_raw[0] * LSM6DSO_GYRO_SENSITIVITY);
+	dev->gyro_dps[1] = (dev->gyro_raw[1] * LSM6DSO_GYRO_SENSITIVITY);
+	dev->gyro_dps[2] = (dev->gyro_raw[2] * LSM6DSO_GYRO_SENSITIVITY);
 }
 
 void LSM6DSO_ReadAll(LSM6DSO_t *dev) {
