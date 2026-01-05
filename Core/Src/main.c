@@ -131,6 +131,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  static float angle_pitch = 0.0f;
+	  static float angle_roll = 0.0f;
+
+	  const float alpha = 0.96f;
+	  const float dt = 0.1f;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -141,11 +146,17 @@ int main(void)
 	  float ay = imu_sensor.accel_g[1];
 	  float az = imu_sensor.accel_g[2];
 
-	  float pitch = atan2(-ax, sqrt(ay*ay + az*az)) * (180.0f / 3.14159f);
+	  float pitch_acc = atan2(-ax, sqrt(ay*ay + az*az)) * (180.0f / 3.14159f);
 
-	  float roll = atan2(ay, az) * (180.0f / 3.14159f);
+	  float roll_acc = atan2(ay, az) * (180.0f / 3.14159f);
 
-	  printf("Pitch: %6.2f [deg] | Roll: %6.2f [deg]\r\n", pitch, roll);
+	  float gyro_x = imu_sensor.gyro_dps[0];
+	  float gyro_y = imu_sensor.gyro_dps[1];
+
+	  angle_pitch = alpha * (angle_pitch + gyro_y * dt) + (1.0f - alpha) * pitch_acc;
+	  angle_roll = alpha * (angle_roll + gyro_x * dt) + (1.0f - alpha) * roll_acc;
+
+	  printf("P: %6.2f | R: %6.2f [deg]\r\n", angle_pitch, angle_roll);
 
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 
