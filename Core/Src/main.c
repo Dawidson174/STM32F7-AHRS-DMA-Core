@@ -24,6 +24,7 @@
 #include "lsm6dso.h"
 #include "lis3mdl.h"
 #include <stdio.h>
+#include <math.h>
 #include "stm32f7xx_hal.h"
 /* USER CODE END Includes */
 
@@ -134,19 +135,21 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  LSM6DSO_ReadAll(&imu_sensor);
-
 	  LIS3MDL_ReadMag(&mag_sensor);
 
-	  printf("ACC: %.2f, %.2f, %.2f [g] | GYRO: %.2f, %.2f, %.2f [dps]\r\n",
-	             imu_sensor.accel_g[0], imu_sensor.accel_g[1], imu_sensor.accel_g[2],
-	             imu_sensor.gyro_dps[0], imu_sensor.gyro_dps[1], imu_sensor.gyro_dps[2]);
+	  float ax = imu_sensor.accel_g[0];
+	  float ay = imu_sensor.accel_g[1];
+	  float az = imu_sensor.accel_g[2];
 
-	  printf("MAG: %.2f, %.2f, %.2f [Gauss]\r\n\r\n",
-			  mag_sensor.mag_gauss[0], mag_sensor.mag_gauss[1], mag_sensor.mag_gauss[2]);
+	  float pitch = atan2(-ax, sqrt(ay*ay + az*az)) * (180.0f / 3.14159f);
+
+	  float roll = atan2(ay, az) * (180.0f / 3.14159f);
+
+	  printf("Pitch: %6.2f [deg] | Roll: %6.2f [deg]\r\n", pitch, roll);
 
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 
-	  HAL_Delay(200);
+	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
