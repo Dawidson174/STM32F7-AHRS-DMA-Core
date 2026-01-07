@@ -23,9 +23,8 @@
 /* USER CODE BEGIN Includes */
 #include "lsm6dso.h"
 #include "lis3mdl.h"
+#include "ahrs.h"
 #include <stdio.h>
-#include <math.h>
-#include "stm32f7xx_hal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,6 +53,7 @@ UART_HandleTypeDef huart3;
 /* USER CODE BEGIN PV */
 LSM6DSO_t imu_sensor;
 LIS3MDL_t mag_sensor;
+AHRS_t ahrs_sys;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,42 +125,36 @@ int main(void)
 	  printf("MAG FAILED!\r\n");
   }
 
+  AHRS_Init(&ahrs_sys, 0.96f, 0.1f);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  static float angle_pitch = 0.0f;
-	  static float angle_roll = 0.0f;
 
-	  const float alpha = 0.96f;
-	  const float dt = 0.1f;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+/*
+	  /* 1. Acquire Data */
 	  LSM6DSO_ReadAll(&imu_sensor);
 	  LIS3MDL_ReadMag(&mag_sensor);
 
-	  float ax = imu_sensor.accel_g[0];
-	  float ay = imu_sensor.accel_g[1];
-	  float az = imu_sensor.accel_g[2];
+	  /* 2. Process Data (Sensor Fusion) */
+	  AHRS_Update(&ahrs_sys,
+			  	  imu_sensor.accel_g[0], imu_sensor.accel_g[1], imu_sensor.accel_g[2],
+			  	  imu_sensor.gyro_dps[0], imu_sensor.gyro_dps[1], imu_sensor.gyro_dps[2],
+				  mag_sensor.mag_gauss[0], mag_sensor.mag_gauss[1], mag_sensor.mag_gauss[2]);
 
-	  float pitch_acc = atan2(-ax, sqrt(ay*ay + az*az)) * (180.0f / 3.14159f);
-
-	  float roll_acc = atan2(ay, az) * (180.0f / 3.14159f);
-
-	  float gyro_x = imu_sensor.gyro_dps[0];
-	  float gyro_y = imu_sensor.gyro_dps[1];
-
-	  angle_pitch = alpha * (angle_pitch + gyro_y * dt) + (1.0f - alpha) * pitch_acc;
-	  angle_roll = alpha * (angle_roll + gyro_x * dt) + (1.0f - alpha) * roll_acc;
-
-	  printf("P: %6.2f | R: %6.2f [deg]\r\n", angle_pitch, angle_roll);
+	  /* 3. Output */
+	  printf("P: %6.2f | R: %6.2f | Y: %6.2f\r\n",
+			  ahrs_sys.pitch, ahrs_sys.roll, ahrs_sys.yaw);
 
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-
 	  HAL_Delay(100);
+
   }
   /* USER CODE END 3 */
 }
