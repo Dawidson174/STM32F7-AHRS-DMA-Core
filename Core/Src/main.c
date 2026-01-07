@@ -139,8 +139,9 @@ int main(void)
     /* USER CODE BEGIN 3 */
 /*
 	  /* 1. Acquire Data */
-	  LSM6DSO_ReadAll(&imu_sensor);
-	  LIS3MDL_ReadMag(&mag_sensor);
+	  LSM6DSO_Request_DMA(&imu_sensor);
+	  HAL_Delay(1);
+	  LIS3MDL_Request_DMA(&mag_sensor);
 
 	  /* 2. Process Data (Sensor Fusion) */
 	  AHRS_Update(&ahrs_sys,
@@ -418,7 +419,12 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) {
+	if (hi2c->Instance == I2C1) {
+		LSM6DSO_Process_DMA_Data(&imu_sensor);
+		LIS3MDL_Process_DMA_Data(&mag_sensor);
+	}
+}
 /* USER CODE END 4 */
 
 /**
